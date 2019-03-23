@@ -1,8 +1,10 @@
 #include <stdio.h>
-#include "syntax.h"
+#include "lang.h"
+#include "parser.h"
+#include <stdio.h>
 
 int main(int argc, char **args) 
 {
-  struct stmt st;
-  printf("%d\n", defunc);
+  char *toks = ftoks(fopen("test/def.cr", "r"));
+  print_toks(toks);
 }
