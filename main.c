@@ -1,6 +1,6 @@
-#include <stdio.h>
 #include "lang.h"
 #include "parser.h"
+#include "toks.h"
 #include <stdio.h>
 
 int main(int argc, char **args) 

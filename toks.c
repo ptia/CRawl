@@ -53,7 +53,8 @@ char *ftoks(FILE *file)
 
 const char *next(const char **toks)
 {
-  assert (**toks && **toks != EOF);
+  if (**toks == EOF)
+    return *toks;
   const char *prev = *toks;
   while (**toks)
     (*toks)++;
