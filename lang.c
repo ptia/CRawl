@@ -4,6 +4,8 @@
 
 void free_stmt(struct stmt *stmt)
 {
+  if (!stmt)
+    return;
   switch (stmt->kind) {
     case varass:
       free_expr(stmt->varass.val);
@@ -44,13 +46,15 @@ void free_stmt(struct stmt *stmt)
 
 void free_expr(struct expr *expr)
 {
+  if (!expr)
+    return;
   switch (expr->kind) {
     case arrel:
       free_expr(expr->arrel.index);
       break;
 
-    case funcall:
-      free_expr(expr->funcall.args);
+    case funcval:
+      free_expr(expr->funcval.args);
       break;
 
     case var:
@@ -74,7 +78,7 @@ void print_stmt(struct stmt *stmt)
       break;
 
     case arrass:
-      printf("%s [ ", stmt->arrass.var);
+      printf("%s [", stmt->arrass.var);
       print_expr(stmt->arrass.index);
       printf("] = ");
       print_expr(stmt->arrass.val);
@@ -84,22 +88,19 @@ void print_stmt(struct stmt *stmt)
     case ifels:
       printf("if (");
       print_expr(stmt->ifels.pred);
-      printf(") \n {");
+      printf(")\n");
       print_stmt(stmt->ifels.then);
-      printf("}\n");
       if (stmt->ifels.els) {
-        printf("else {\n");
+        printf("else\n");
         print_stmt(stmt->ifels.els);
-        printf("}\n");
       }
       break;
 
     case wloop:
-      printf("if (");
+      printf("while (");
       print_expr(stmt->wloop.pred);
-      printf(") \n {");
+      printf(") \n");
       print_stmt(stmt->wloop.body);
-      printf("}\n");
       break;
 
     case retrn:
@@ -109,13 +110,17 @@ void print_stmt(struct stmt *stmt)
       break;
 
     case block:
-      printf("block:\n");
+      printf("{\n");
+      if (stmt->block.fst)
+        print_stmt(stmt->block.fst);
+      printf("}\n");
       break;
 
     case defunc:
-      printf("def %s () {", stmt->defunc.name);
+      printf("def %s", stmt->defunc.name);
+      print_expr(stmt->defunc.args);
+      printf("\n");
       print_stmt(stmt->defunc.body);
-      printf("} \n");
       break;
   }
 
@@ -125,5 +130,39 @@ void print_stmt(struct stmt *stmt)
 
 void print_expr(struct expr *expr)
 {
+  switch (expr->kind) {
+    case var:
+      printf("%s", expr->var.name);
+      break;
 
+    case arrel:
+      printf("%s", expr->arrel.name);
+      print_expr(expr->arrel.index);
+      break;
+
+    case num:
+      printf("%d", expr->num.val);
+      break;
+
+    case str:
+      printf("\"%s\"", expr->str.val);
+      break;
+
+    case funcval:
+      printf("%s", expr->funcval.name);
+      print_expr(expr->funcval.args);
+      break;
+
+    case list:
+      printf("(");
+      if (expr->list.fst)
+        print_expr(expr->list.fst);
+      printf(")");
+      break;
+  }
+
+  if (expr->list_next) {
+    printf(", ");
+    print_expr(expr->list_next);
+  }
 }

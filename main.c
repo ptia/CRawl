@@ -1,10 +1,17 @@
 #include "lang.h"
 #include "parse.h"
-#include "toks.h"
 #include <stdio.h>
 
 int main(int argc, char **args) 
 {
-  char *toks = ftoks(fopen("test/def.cr", "r"));
-  print_toks(toks);
+  if (!(argc == 2)) {
+    printf("requires 1 argument\n");
+    return 1;
+  }
+  struct stmt *prgm = parse(fopen(args[1], "r"));
+  if (!prgm) {
+    printf("parse error\n");
+    return 1;
+  }
+  print_stmt(prgm);
 }

@@ -48,6 +48,20 @@ char *ftoks(FILE *file)
       for (; isalnum(c); c = fgetc(file)) 
         out[i++] = c;
       out[i++] = '\0';
+    } else if (c == '\"') {
+      out[i++] = c;
+      out[i++] = '\0';
+      c = fgetc(file);
+      while (c != '\"' && c != EOF) {
+        out[i++] = c;
+        c = fgetc (file);
+      }
+      out[i++] = '\0';
+      if (c == '\"') {
+        out[i++] = c;
+        out[i++] = '\0';
+        c = fgetc(file);
+      }
     } else {
       out[i++] = c;
       out[i++] = '\0';

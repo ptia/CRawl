@@ -105,8 +105,6 @@ struct stmt *parse_retrn(const char **toks) {
   expect (streq(next(toks), "return"));
   out->retrn.val = parse_expr(toks);
   expect (out->retrn.val);
-  out->wloop.body = parse_stmt(toks);
-  expect (out->wloop.body);
   expect (streq(next(toks), ";"));
   return out;
   
@@ -125,10 +123,9 @@ struct stmt *parse_defunc(const char **toks)
   expect (streq(next(toks), "def"));
   out->defunc.name = next(toks);
   expect (is_id(out->defunc.name));
-  expect (streq(next(toks), "("));
   out->defunc.args = parse_list(toks);
   expect (out->defunc.args);
-  for (struct expr *arg = out->defunc.args->list_next;
+  for (struct expr *arg = out->defunc.args->list.fst;
        arg;
        arg = arg->list_next)
     expect (arg->kind == var);
@@ -149,11 +146,12 @@ struct stmt *parse_block(const char **toks)
   out->kind = block;
 
   expect (streq(next(toks) ,"{"));
-  struct stmt *curr = out;
-  while ((curr->block_next = parse_stmt(toks))) {
-    curr = curr->block_next;
+  struct stmt **curr = &out->block.fst;
+  while ((*curr = parse_stmt(toks))) {
+    curr = &(*curr)->block_next;
   }
   expect (streq(next(toks) ,"}"));
+  return out;
 
 error:
   free_stmt(out);

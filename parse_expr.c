@@ -42,6 +42,23 @@ error:
   return NULL;
 }
 
+struct expr *parse_str(const char **toks)
+{
+  const char *toks_pre = *toks;
+  struct expr *out = calloc(1, sizeof(*out));
+  out->kind = str;
+
+  expect (streq(next(toks) ,"\""));
+  out->str.val = next(toks);
+  expect (streq(next(toks) ,"\""));
+  return out;
+
+error:
+  free_expr(out);
+  *toks = toks_pre;
+  return NULL;
+}
+
 struct expr *parse_list(const char **toks)
 {
   const char *toks_pre = *toks;
@@ -49,9 +66,9 @@ struct expr *parse_list(const char **toks)
   out->kind = list;
 
   expect (streq(next(toks) ,"("));
-  struct expr *curr = out;
-  while ((curr->list_next = parse_expr(toks))) {
-    curr = curr->list_next;
+  struct expr **curr = &out->list.fst;
+  while ((*curr = parse_expr(toks))) {
+    curr = &(*curr)->list_next;
     const char *delim = peek_next(toks);
     if (streq(delim, ",")) {
       next(toks);
@@ -67,12 +84,34 @@ error:
   return NULL;
 }
 
+struct expr *parse_funcval(const char **toks)
+{
+  const char *toks_pre = *toks;
+  struct expr *out = calloc(1, sizeof(*out));
+  out->kind = funcval;
+
+  out->funcval.name = next(toks);
+  expect (is_id(out->funcval.name));
+  out->funcval.args = parse_list(toks);
+  expect (out->funcval.args);
+  return out;
+
+error:
+  free_expr(out);
+  *toks = toks_pre;
+  return NULL;
+}
+
 struct expr *parse_expr(const char **toks)
 {
   struct expr *out;
+  if ((out = parse_funcval(toks)))
+    return out;
   if ((out = parse_var(toks)))
     return out;
   if ((out = parse_num(toks)))
+    return out;
+  if ((out = parse_str(toks)))
     return out;
   if ((out = parse_list(toks)))
     return out;

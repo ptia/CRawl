@@ -9,18 +9,20 @@ struct stmt {
     struct { struct expr *pred; struct stmt *body; } wloop;
     struct { struct expr *val; } retrn;
     struct { const char *name; struct expr *args; struct stmt *body; } defunc;
+    struct { struct stmt *fst; } block;
   };
   struct stmt *block_next;
 };
 
 struct expr {
-  enum {var, arrel, num, str, funcall, list} kind;
+  enum {var, arrel, num, str, funcval, list} kind;
   union {
     struct { const char *name; } var;
     struct { const char *name; struct expr *index; } arrel;
     struct { int val; } num;
     struct { const char *val; } str;
-    struct { const char *name; struct expr *args; } funcall;
+    struct { const char *name; struct expr *args; } funcval;
+    struct { struct expr *fst; } list;
   };
   struct expr *list_next;
 };

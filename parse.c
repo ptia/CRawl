@@ -9,9 +9,7 @@
 
 struct stmt *parse(FILE *file) 
 {
-  //TODO
   assert (file != NULL);
   const char *toks = ftoks(file);
-  struct stmt *fst = parse_stmt(&toks);
-  return fst;
+  return parse_stmt(&toks);
 }
