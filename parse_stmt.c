@@ -1,27 +1,19 @@
-#include "parser.h"
+#include "parse_stmt.h"
 #include "lang.h"
 #include "toks.h"
+#include "parse_expr.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <assert.h>
 
-#define expect(pred) do { if (!(pred)) goto error; } while (0);
-
-static const unsigned int argc_max = 8;
-
-struct stmt *parse_stmt(const char **toks);
-
-struct expr *parse_expr(const char **toks)
-{
-  return NULL;
-}
+#define expect(pred) do { if (!(pred)) goto error; } while (0)
 
 struct stmt *parse_varass(const char **toks)
 {
   const char *toks_pre = *toks;
-  struct stmt *out = calloc(1, sizeof(struct stmt));
+  struct stmt *out = calloc(1, sizeof(*out));
   out->kind = varass;
   
   out->varass.var = next(toks);
@@ -41,7 +33,7 @@ error:
 struct stmt *parse_arrass(const char **toks)
 {
   const char *toks_pre = *toks;
-  struct stmt *out = calloc(1, sizeof(struct stmt));
+  struct stmt *out = calloc(1, sizeof(*out));
   out->kind = arrass;
   
   out->arrass.var = next(toks);
@@ -63,7 +55,7 @@ error:
 
 struct stmt *parse_ifels(const char **toks) {
   const char *toks_pre = *toks;
-  struct stmt *out = calloc(1, sizeof(struct stmt));
+  struct stmt *out = calloc(1, sizeof(*out));
   out->kind = ifels;
 
   expect (streq(next(toks), "if"));
@@ -87,7 +79,7 @@ error:
 
 struct stmt *parse_wloop(const char **toks) {
   const char *toks_pre = *toks;
-  struct stmt *out = calloc(1, sizeof(struct stmt));
+  struct stmt *out = calloc(1, sizeof(*out));
   out->kind = wloop;
 
   expect (streq(next(toks), "while"));
@@ -107,7 +99,7 @@ error:
 
 struct stmt *parse_retrn(const char **toks) {
   const char *toks_pre = *toks;
-  struct stmt *out = calloc(1, sizeof(struct stmt));
+  struct stmt *out = calloc(1, sizeof(*out));
   out->kind = retrn;
 
   expect (streq(next(toks), "return"));
@@ -127,30 +119,19 @@ error:
 struct stmt *parse_defunc(const char **toks)
 {
   const char *toks_pre = *toks;
-  struct stmt *out = calloc(1, sizeof(struct stmt));
+  struct stmt *out = calloc(1, sizeof(*out));
   out->kind = defunc;
 
   expect (streq(next(toks), "def"));
   out->defunc.name = next(toks);
   expect (is_id(out->defunc.name));
   expect (streq(next(toks), "("));
-
-  out->defunc.args = malloc(sizeof(char *) * argc_max);
-  int argc = 0;
-  while (1) {
-    expect (argc < argc_max); //TODO: resize
-    const char *arg = next(toks);
-    if (streq(arg, ")") && argc == 0)
-      break;
-    expect (is_id(arg));
-    out->defunc.args[argc++] = arg;
-    const char *delim = next(toks);
-    if (streq(delim, ")"))
-      break;
-    expect (streq(delim, ","));
-  }
-
-  out->defunc.argc = argc;
+  out->defunc.args = parse_list(toks);
+  expect (out->defunc.args);
+  for (struct expr *arg = out->defunc.args->list_next;
+       arg;
+       arg = arg->list_next)
+    expect (arg->kind == var);
   out->defunc.body = parse_stmt(toks);
   expect (out->defunc.body);
   return out;
@@ -164,7 +145,7 @@ error:
 struct stmt *parse_block(const char **toks)
 {
   const char *toks_pre = *toks;
-  struct stmt *out = calloc(1, sizeof(struct stmt));
+  struct stmt *out = calloc(1, sizeof(*out));
   out->kind = block;
 
   expect (streq(next(toks) ,"{"));
@@ -198,13 +179,4 @@ struct stmt *parse_stmt(const char **toks)
   if ((out = parse_block(toks)))
     return out;
   return NULL;
-}
-
-struct stmt *parse(FILE *file) 
-{
-  //TODO
-  assert (file != NULL);
-  const char *toks = ftoks(file);
-  struct stmt *fst = parse_stmt(&toks);
-  return fst;
 }

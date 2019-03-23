@@ -12,11 +12,18 @@ bool streq(const char *s1, const char *s2)
 
 bool is_id(const char *str)
 {
-  assert (*str);
   if (!isalpha(*str))
     return false;
   for (; *str; str++)
     if (!isalnum(*str))
+      return false;
+  return true;
+}
+
+bool is_digits(const char *str)
+{
+  for (; *str; str++)
+    if (!isdigit(*str))
       return false;
   return true;
 }
@@ -60,6 +67,11 @@ const char *next(const char **toks)
     (*toks)++;
   (*toks)++;
   return prev;
+}
+
+const char *peek_next(const char **toks)
+{
+  return *toks;
 }
 
 void print_toks(const char *fst_tok)

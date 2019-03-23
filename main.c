@@ -1,5 +1,5 @@
 #include "lang.h"
-#include "parser.h"
+#include "parse.h"
 #include "toks.h"
 #include <stdio.h>
 
