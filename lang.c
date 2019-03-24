@@ -7,13 +7,9 @@ void free_stmt(struct stmt *stmt)
   if (!stmt)
     return;
   switch (stmt->kind) {
-    case varass:
-      free_expr(stmt->varass.val);
-      break;
-
-    case arrass:
-      free_expr(stmt->arrass.index);
-      free_expr(stmt->arrass.val);
+    case assign:
+      free_expr(stmt->assign.lhs);
+      free_expr(stmt->assign.rhs);
       break;
 
     case ifels:
@@ -32,6 +28,7 @@ void free_stmt(struct stmt *stmt)
       break;
 
     case block:
+      free_stmt(stmt->block.fst);
       break;
 
     case defunc:
@@ -57,10 +54,12 @@ void free_expr(struct expr *expr)
       free_expr(expr->funcval.args);
       break;
 
+    case list:
+      free_expr(expr->list.fst);
+
     case var:
     case num:
     case str:
-    case list:
       break;
   }
 
@@ -71,17 +70,10 @@ void free_expr(struct expr *expr)
 void print_stmt(struct stmt *stmt)
 {
   switch (stmt->kind) {
-    case varass:
-      printf("%s = ", stmt->varass.var);
-      print_expr(stmt->varass.val);
-      printf(";\n");
-      break;
-
-    case arrass:
-      printf("%s [", stmt->arrass.var);
-      print_expr(stmt->arrass.index);
-      printf("] = ");
-      print_expr(stmt->arrass.val);
+    case assign:
+      print_expr(stmt->assign.lhs);
+      printf(" = ");
+      print_expr(stmt->assign.rhs);
       printf(";\n");
       break;
 
@@ -137,7 +129,9 @@ void print_expr(struct expr *expr)
 
     case arrel:
       printf("%s", expr->arrel.name);
+      printf("[");
       print_expr(expr->arrel.index);
+      printf("]");
       break;
 
     case num:

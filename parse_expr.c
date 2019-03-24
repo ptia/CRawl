@@ -25,6 +25,25 @@ error:
   return NULL;
 }
 
+struct expr *parse_arrel(const char **toks)
+{
+  const char *toks_pre = *toks;
+  struct expr *out = calloc(1, sizeof(*out));
+  out->kind = arrel;
+
+  out->arrel.name = next(toks);
+  expect (is_id(out->arrel.name));
+  expect (streq(next(toks) ,"["));
+  out->arrel.index = parse_expr(toks);
+  expect (streq(next(toks), "]"));
+  return out;
+
+error:
+  free_expr(out);
+  *toks = toks_pre;
+  return NULL;
+}
+
 struct expr *parse_num(const char **toks)
 {
   const char *toks_pre = *toks;
@@ -106,6 +125,8 @@ struct expr *parse_expr(const char **toks)
 {
   struct expr *out;
   if ((out = parse_funcval(toks)))
+    return out;
+  if ((out = parse_arrel(toks)))
     return out;
   if ((out = parse_var(toks)))
     return out;

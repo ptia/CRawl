@@ -10,40 +10,19 @@
 
 #define expect(pred) do { if (!(pred)) goto error; } while (0)
 
-struct stmt *parse_varass(const char **toks)
+struct stmt *parse_assign(const char **toks)
 {
   const char *toks_pre = *toks;
   struct stmt *out = calloc(1, sizeof(*out));
-  out->kind = varass;
+  out->kind = assign;
   
-  out->varass.var = next(toks);
-  expect (is_id(out->varass.var));
+  out->assign.lhs = parse_expr(toks);
+  expect(out->assign.lhs);
+  expect(out->assign.lhs->kind == var 
+      || out->assign.lhs->kind == arrel);
   expect (streq(next(toks) ,"="));
-  out->varass.val = parse_expr(toks);
-  expect (out->varass.val);
-  expect (streq(next(toks), ";"));
-  return out;
-
-error:
-  free_stmt(out);
-  *toks = toks_pre;
-  return NULL;
-}
-
-struct stmt *parse_arrass(const char **toks)
-{
-  const char *toks_pre = *toks;
-  struct stmt *out = calloc(1, sizeof(*out));
-  out->kind = arrass;
-  
-  out->arrass.var = next(toks);
-  expect (is_id(out->varass.var));
-  expect (streq(next(toks) ,"["));
-  out->arrass.index = parse_expr(toks);
-  expect (streq(next(toks), "]"));
-  expect (streq(next(toks) ,"="));
-  out->arrass.val = parse_expr(toks);
-  expect (out->arrass.val);
+  out->assign.rhs = parse_expr(toks);
+  expect (out->assign.rhs);
   expect (streq(next(toks), ";"));
   return out;
 
@@ -65,7 +44,7 @@ struct stmt *parse_ifels(const char **toks) {
   expect (streq(next(toks), ")"));
   out->ifels.then = parse_stmt(toks);
   expect (out->ifels.then);
-  if (streq(next(toks), "else")) {
+  if (streq(peek_next(toks), "else")) {
     out->ifels.els = parse_stmt(toks);
     expect (out->ifels.els);
   }
@@ -162,9 +141,7 @@ error:
 struct stmt *parse_stmt(const char **toks)
 {
   struct stmt *out;
-  if ((out = parse_varass(toks)))
-    return out;
-  if ((out = parse_arrass(toks)))
+  if ((out = parse_assign(toks)))
     return out;
   if ((out = parse_ifels(toks)))
     return out;

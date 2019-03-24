@@ -1,10 +1,9 @@
 #pragma once
 
 struct stmt {
-  enum {varass, arrass, ifels, wloop, retrn, defunc, block} kind;
+  enum {assign, ifels, wloop, retrn, defunc, block} kind;
   union {
-    struct { const char *var; struct expr *val; } varass;
-    struct { const char *var; struct expr *index; struct expr *val; } arrass;
+    struct { struct expr *lhs; struct expr *rhs; } assign;
     struct { struct expr *pred; struct stmt *then; struct stmt *els; } ifels;
     struct { struct expr *pred; struct stmt *body; } wloop;
     struct { struct expr *val; } retrn;
