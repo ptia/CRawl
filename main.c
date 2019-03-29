@@ -1,5 +1,5 @@
 #include "lang.h"
-#include "parse.h"
+#include "parse/parse.h"
 #include <stdio.h>
 
 int main(int argc, char **args) 

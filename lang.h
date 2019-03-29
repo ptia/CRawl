@@ -1,16 +1,17 @@
 #pragma once
+#include "list/list.h"
 
 struct stmt {
-  enum {assign, ifels, wloop, retrn, defunc, block} kind;
+  enum {assign, funcall, ifels, wloop, retrn, defunc, block} kind;
   union {
     struct { struct expr *lhs; struct expr *rhs; } assign;
+    struct { struct expr *funcexpr; } funcall;
     struct { struct expr *pred; struct stmt *then; struct stmt *els; } ifels;
     struct { struct expr *pred; struct stmt *body; } wloop;
     struct { struct expr *val; } retrn;
     struct { const char *name; struct expr *args; struct stmt *body; } defunc;
-    struct { struct stmt *fst; } block;
+    struct { struct list *stmts; } block;
   };
-  struct stmt *block_next;
 };
 
 struct expr {
@@ -21,9 +22,8 @@ struct expr {
     struct { int val; } num;
     struct { const char *val; } str;
     struct { const char *name; struct expr *args; } funcval;
-    struct { struct expr *fst; } list;
+    struct { struct list *exprs; } list;
   };
-  struct expr *list_next;
 };
 
 void free_stmt(struct stmt *stmt);

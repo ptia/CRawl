@@ -1,4 +1,5 @@
 #include "lang.h"
+#include "list/list.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -10,6 +11,10 @@ void free_stmt(struct stmt *stmt)
     case assign:
       free_expr(stmt->assign.lhs);
       free_expr(stmt->assign.rhs);
+      break;
+
+    case funcall:
+      free_expr(stmt->funcall.funcexpr);
       break;
 
     case ifels:
@@ -28,7 +33,7 @@ void free_stmt(struct stmt *stmt)
       break;
 
     case block:
-      free_stmt(stmt->block.fst);
+      l_free(stmt->block.stmts, (void (*) (void *)) free_stmt);
       break;
 
     case defunc:
@@ -36,8 +41,6 @@ void free_stmt(struct stmt *stmt)
       free_stmt(stmt->defunc.body);
       break;
   }
-
-  free_stmt(stmt->block_next);
   free(stmt);
 }
 
@@ -55,7 +58,8 @@ void free_expr(struct expr *expr)
       break;
 
     case list:
-      free_expr(expr->list.fst);
+      l_free(expr->list.exprs, (void (*) (void *)) free_expr);
+      break;
 
     case var:
     case num:
@@ -63,7 +67,6 @@ void free_expr(struct expr *expr)
       break;
   }
 
-  free_expr(expr->list_next);
   free(expr);
 }
 
@@ -74,6 +77,11 @@ void print_stmt(struct stmt *stmt)
       print_expr(stmt->assign.lhs);
       printf(" = ");
       print_expr(stmt->assign.rhs);
+      printf(";\n");
+      break;
+
+    case funcall:
+      print_expr(stmt->funcall.funcexpr);
       printf(";\n");
       break;
 
@@ -103,8 +111,9 @@ void print_stmt(struct stmt *stmt)
 
     case block:
       printf("{\n");
-      if (stmt->block.fst)
-        print_stmt(stmt->block.fst);
+      struct stmt *elem;
+      L_FOREACH(stmt->block.stmts, elem)
+        print_stmt(elem);
       printf("}\n");
       break;
 
@@ -115,9 +124,6 @@ void print_stmt(struct stmt *stmt)
       print_stmt(stmt->defunc.body);
       break;
   }
-
-  if (stmt->block_next)
-    print_stmt(stmt->block_next);
 }
 
 void print_expr(struct expr *expr)
@@ -149,14 +155,16 @@ void print_expr(struct expr *expr)
 
     case list:
       printf("(");
-      if (expr->list.fst)
-        print_expr(expr->list.fst);
+      struct expr *elem;
+      bool fst = true;
+      L_FOREACH(expr->list.exprs, elem) {
+        if (fst) 
+          fst = false;
+        else
+          printf(", ");
+        print_expr(elem);
+      }
       printf(")");
       break;
-  }
-
-  if (expr->list_next) {
-    printf(", ");
-    print_expr(expr->list_next);
   }
 }
