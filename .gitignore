@@ -5,3 +5,5 @@
 !CMakeLists.txt
 !*.c
 !*.h
+CMakeFiles/*
+CMakeFiles/*/
